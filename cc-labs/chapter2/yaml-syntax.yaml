@@ -1,0 +1,19 @@
+# key value pairs 
+
+name: John Doe
+age: 30
+job: Developer
+
+# Lists
+
+fruits:
+  - Apple
+  - Banana
+  - Cherry
+
+  # Nested elements
+
+address:
+  street: 123 Main St
+  city: London
+  country: UK
