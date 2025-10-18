@@ -1,0 +1,37 @@
+name: automating image push to dockerhub
+
+on: [push]
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and publish
+        run: |
+          registry="marwaam"
+          sha=$(git rev-parse --short HEAD
+          primary_tag=${registry}/cicd-test:${sha}
+          
+          docker build -t ${primary_tag} -f ./Dockerfile .
+          docker push ${primary_tag})
+
+          current_branch=$(git rev-parse --abbrev-ref HEAD
+          if [ "$current_branch" == "main" ]; then
+          retention_tag=${registry}/cicd-test:retention
+            docker tag ${primary_tag} ${retention_tag}
+            docker push ${retention_tag}
+            else
+            
