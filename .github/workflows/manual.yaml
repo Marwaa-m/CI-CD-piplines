@@ -16,17 +16,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['${{ github.event.inputs.python-version }}']
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ inputs.python-version }}
 
       - name: Install dependencies
         run: |
@@ -41,4 +39,4 @@ jobs:
 
       - name: Notify success
         if: success()
-        run: echo "Tests passed on Python ${{ matrix.python-version }}"
+        run: echo "✅ Tests passed on Python ${{ inputs.python-version }}"
