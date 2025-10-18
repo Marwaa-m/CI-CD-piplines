@@ -7,11 +7,12 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20-04
-
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]   # three builds
+        python-version: ["3.10", "3.11", "3.12"]
+
+    name: Python ${{ matrix.python-version }} build  # this line helps visually
 
     steps:
       - name: Checkout
@@ -32,4 +33,3 @@ jobs:
         run: |
           cd cc-labs/chapter3
           python -m unittest discover -v
-
