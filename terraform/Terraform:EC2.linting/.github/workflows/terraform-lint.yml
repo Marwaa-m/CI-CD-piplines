@@ -1,0 +1,35 @@
+name: Terraform fmt & validate (simple)
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - "infra/**/*.tf"                   # only run when TF files change
+      - ".github/workflows/terraform-lint.yml"
+  workflow_dispatch:                      # allow manual runs
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5        # or any recent version you use
+
+      - name: terraform fmt (check only)
+        working-directory: infra
+        run: terraform fmt -check -diff
+
+      - name: terraform init (no backend)
+        working-directory: infra
+        run: terraform init -backend=false
+
+      - name: terraform validate
+        working-directory: infra
+        run: terraform validate
+
