@@ -1,0 +1,76 @@
+# ---------- Frontend build stage ----------
+FROM node:18-alpine AS frontend-builder
+
+
+WORKDIR /web
+
+
+# Install frontend dependencies using pnpm
+COPY web/package.json web/pnpm-lock.yaml ./
+RUN corepack enable && pnpm install --frozen-lockfile
+
+
+# Build the React/Vite frontend
+COPY web .
+RUN pnpm build    # produces /web/dist
+
+
+# ---------- Backend build stage ----------
+FROM golang:1.25-alpine AS backend-builder
+
+
+WORKDIR /app
+
+
+# Go modules and dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+
+# Copy backend source code
+COPY . .
+
+
+# Replace placeholder frontend (server/router/frontend/dist)
+# with the real built frontend from the previous stage
+RUN rm -rf server/router/frontend/dist && mkdir -p server/router/frontend/dist
+COPY --from=frontend-builder /web/dist/ server/router/frontend/dist/
+
+
+# Build the memos binary from the project root
+RUN CGO_ENABLED=0 GOOS=linux go build -o memos .
+
+
+# ---------- Runtime stage ----------
+FROM alpine:3.19
+
+
+# Create a non-root user
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+
+WORKDIR /app
+
+
+# Copy the compiled binary only
+COPY --from=backend-builder /app/memos .
+
+
+# Data directory for SQLite
+RUN mkdir -p /var/opt/memos && chown -R appuser:appgroup /var/opt/memos
+
+
+# Default environment
+ENV MEMOS_MODE=prod \
+   MEMOS_DATA=/var/opt/memos \
+   MEMOS_PORT=5230
+
+
+# Run as non-root
+USER appuser
+
+
+EXPOSE 5230
+
+
+CMD ["./memos"]
